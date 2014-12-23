@@ -1,3 +1,3 @@
-C--Users-Me-Documents-Github-Assteroids
+Assteroids
 =======================================
  a game about asses
