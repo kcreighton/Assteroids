@@ -7,18 +7,25 @@ BLACK   = (000, 000, 000)
 
 CENTER = (200, 150)
 
+ObjectDrawQueue = []
+
 def movement(Object):
-    pass
-    # takes the velocity of all active objects and moves them over time
+    for Object in ObjectDrawQueue:
+        Object.position[0] += Object.velocity[0]
+        Object.position[1] += Object.velocity[1]
+    # takes the velocity of all objects and moves them over time
 
 class Player:
-    def __init__(spawn = CENTER):
+    def __init__(self, spawn = CENTER):
+        self.sprite = pygame.image.load('test.png')
+        self.hitBox = pygame.image.load('test.png')
         self.health = 100
         self.position = [spawn[0], spawn[1]]
-        self.direction = math.pi / 2
+        self.direction = 3 * math.pi / 2
         self.velocity = [0, 0]
         self.thrust = 1
         self.torque = 1
+        ObjectDrawQueue.append(self)
 
     def turn(self, turn):
         if turn == left:
@@ -29,8 +36,8 @@ class Player:
             # rotate direction counterclockwise
                 
     def accelerate(self):
-        self.velocity[0] += self.thrust * math.cos(direction)
-        self.velocity[1] += self.thrust * math.sin(direction)
+        self.velocity[0] += self.thrust * math.cos(self.direction)
+        self.velocity[1] += self.thrust * math.sin(self.direction)
         
     def breaks(self):
         self.velocity[speed] -= self.thrust
@@ -39,60 +46,46 @@ class Player:
         pass
 
 class Gun:
-    def __init__():
+    def __init__(self):
         pass
     
 
 def main():
-
     pygame.init()
 
     FPS = 30 # frames per second setting
     fpsClock = pygame.time.Clock()
 
     # set up the window
-    DISPLAYSURF = pygame.display.set_mode((800, 600), 0, 32)
+    DISPLAYSURF = pygame.display.set_mode((400, 300), 0, 32)
     pygame.display.set_caption('Assteroids')
-    ActiveObjects = None
 
-    # set up the colors
-    BLACK = (  0,   0,   0)
-    WHITE = (255, 255, 255)
-    RED = (255,   0,   0)
-    GREEN = (  0, 255,   0)
-    BLUE = (  0,   0, 255)
-    
-
-
+    One = Player()
 
     while True: # the main game loop 
-         
-        # draw on the surface object
-        DISPLAYSURF.fill(WHITE)
-        pygame.draw.polygon(DISPLAYSURF, GREEN, ((146, 0), (291, 106), (236, 277), (56, 277), (0, 106)))
-        pygame.draw.line(DISPLAYSURF, BLUE, (60, 60), (120, 60), 4)
-        pygame.draw.line(DISPLAYSURF, BLUE, (120, 60), (60, 120))
-        pygame.draw.line(DISPLAYSURF, BLUE, (60, 120), (120, 120), 4)
-        pygame.draw.circle(DISPLAYSURF, BLUE, (300, 50), 20, 0)
-        pygame.draw.ellipse(DISPLAYSURF, RED, (300, 250, 40, 80), 1)
-        pygame.draw.rect(DISPLAYSURF, RED, (200, 150, 100, 50))
-
-        pixObj = pygame.PixelArray(DISPLAYSURF)
-        pixObj[480][380] = BLACK
-        pixObj[482][382] = BLACK
-        pixObj[484][384] = BLACK
-        pixObj[486][386] = BLACK
-        pixObj[488][388] = BLACK
-        del pixObj
         
-        movement(ActiveObjects)
+        DISPLAYSURF.fill(BLACK)
+
+        movement(ObjectDrawQueue)
 
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-             # more events go here
-
+            elif event.type == KEYDOWN:
+                if event.key in (K_LEFT, K_a):
+                    One.turn(left)
+                elif event.key in (K_SPACE, K_d):
+                    One.breaks()
+                elif event.key in (K_UP, K_w):
+                    One.accelerate()
+                elif event.key in (K_DOWN, K_s):
+                    One.turn(right)
+            # more events go here
+        
+        for Object in ObjectDrawQueue:
+            DISPLAYSURF.blit(Object.sprite, Object.position)
+        
         pygame.display.update()
         fpsClock.tick(FPS)
 
