@@ -39,7 +39,7 @@ class Player:
         self.velocity[0] += self.thrust * math.cos(self.direction)
         self.velocity[1] += self.thrust * math.sin(self.direction)
         
-    def breaks(self):
+    def brakes(self):
         self.velocity[0] -= self.thrust * math.cos(self.direction)
         self.velocity[1] -= self.thrust * math.sin(self.direction)
 
@@ -77,7 +77,7 @@ def main():
                 if event.key in (K_LEFT, K_a):
                     One.turn(left)
                 elif event.key in (K_SPACE, K_d):
-                    One.breaks()
+                    One.brakes()
                 elif event.key in (K_UP, K_w):
                     One.accelerate()
                 elif event.key in (K_DOWN, K_s):
