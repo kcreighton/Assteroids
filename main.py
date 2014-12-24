@@ -9,8 +9,8 @@ CENTER = (200, 150)
 
 ObjectDrawQueue = []
 
-def movement(Object):
-    for Object in ObjectDrawQueue:
+def inertia(Objects):
+    for Object in Objects:
         Object.position[0] += Object.velocity[0]
         Object.position[1] += Object.velocity[1]
     # takes the velocity of all objects and moves them over time
@@ -66,7 +66,7 @@ def main():
         
         DISPLAYSURF.fill(BLACK)
 
-        movement(ObjectDrawQueue)
+        inertia(ObjectDrawQueue)
 
         for event in pygame.event.get():
             if event.type == QUIT:
