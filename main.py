@@ -40,7 +40,8 @@ class Player:
         self.velocity[1] += self.thrust * math.sin(self.direction)
         
     def breaks(self):
-        self.velocity[speed] -= self.thrust
+        self.velocity[0] -= self.thrust * math.cos(self.direction)
+        self.velocity[1] -= self.thrust * math.sin(self.direction)
 
     def damage(self):
         pass
