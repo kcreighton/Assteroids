@@ -3,9 +3,9 @@ from pygame.locals import *
 
 # COLOR = (RRR, GGG, BBB)
 BLACK   = (000, 000, 000)
+CLEAR   = (000, 000, 000, 000)
 
-
-CENTER = (200, 150)
+CENTER = (400, 300)
 
 ObjectDrawQueue = []
 
@@ -17,32 +17,26 @@ def inertia(Objects):
 
 class Player:
     def __init__(self, spawn = CENTER):
-        self.sprite = pygame.image.load('test.png')
-        self.hitBox = pygame.image.load('test.png')
+        self.image = pygame.image.load('test.png') # the source image
+        self.sprite = pygame.image.load('test.png') # where the rotated image will be stored
         self.health = 100
         self.position = [spawn[0], spawn[1]]
-        self.direction = 3 * math.pi / 2
         self.velocity = [0, 0]
         self.thrust = 1
-        self.torque = 1
         ObjectDrawQueue.append(self)
 
-    def turn(self, turn):
-        if turn == left:
-            pass
-            # rotate direction clockwise
-        if turn == right:
-            pass
-            # rotate direction counterclockwise
-                
-    def accelerate(self):
-        self.velocity[0] += self.thrust * math.cos(self.direction)
-        self.velocity[1] += self.thrust * math.sin(self.direction)
+    def accelerate(self, direction):
+        self.velocity[0] += self.thrust * math.cos(direction)
+        self.velocity[1] += self.thrust * math.sin(direction)
         
-    def brakes(self):
+    def brakes(self): # notworking properly
         self.velocity[0] -= self.thrust * math.cos(self.direction)
+        if self.velocity[0] < 0:
+            self.velocity[0] = 0
         self.velocity[1] -= self.thrust * math.sin(self.direction)
-
+        if self.velocity[1] < 0:
+            self.velocity[1] = 0
+            
     def damage(self):
         pass
 
@@ -58,15 +52,17 @@ def main():
     fpsClock = pygame.time.Clock()
 
     # set up the window
-    DISPLAYSURF = pygame.display.set_mode((400, 300), 0, 32)
+    BACKGROUND = pygame.display.set_mode((800, 600), 0, 32)
+    STAGE = BACKGROUND.convert_alpha()
+    PHYSICS = BACKGROUND.convert_alpha()
     pygame.display.set_caption('Assteroids')
 
     One = Player()
 
     while True: # the main game loop 
         
-        DISPLAYSURF.fill(BLACK)
-
+        BACKGROUND.fill(BLACK)
+        STAGE.fill(CLEAR)
         inertia(ObjectDrawQueue)
 
         for event in pygame.event.get():
@@ -74,18 +70,19 @@ def main():
                 pygame.quit()
                 sys.exit()
             elif event.type == KEYDOWN:
-                if event.key in (K_LEFT, K_a):
-                    One.turn(left)
-                elif event.key in (K_SPACE, K_d):
-                    One.brakes()
-                elif event.key in (K_UP, K_w):
-                    One.accelerate()
+                if event.key in (K_RIGHT, K_d):
+                    One.accelerate(0)
                 elif event.key in (K_DOWN, K_s):
-                    One.turn(right)
+                    One.accelerate(math.pi/2)
+                elif event.key in (K_LEFT, K_a):
+                    One.accelerate(math.pi)
+                elif event.key in (K_UP, K_w):
+                    One.accelerate(3*math.pi/2)
             # more events go here
         
         for Object in ObjectDrawQueue:
-            DISPLAYSURF.blit(Object.sprite, Object.position)
+            STAGE.blit(Object.sprite, Object.position)
+        BACKGROUND.blit(STAGE, (0, 0))
         
         pygame.display.update()
         fpsClock.tick(FPS)
