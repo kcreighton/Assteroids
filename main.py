@@ -7,9 +7,9 @@ BLACK   = (000, 000, 000)
 
 CENTER = (200, 150)
 
-def movement():
+def movement(Object):
     pass
-    # takes the velocity of all objects and moves them over time
+    # takes the velocity of all active objects and moves them over time
 
 class Player:
     def __init__(spawn = CENTER):
