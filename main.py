@@ -168,6 +168,7 @@ class Actor(RigidBody):
         self.center = [spawn[0] + 16, spawn[1] + 16]
         if preserveVelocity == False:
             self.velocity = [0, 0]
+            self.Gun.velocity = [0, 0]
             
     def damage(self):
         pass
@@ -185,6 +186,7 @@ class Gun:
     def __init__(self, Owner = None):
         self.aim = Owner.aim
         self.position = Owner.center
+        self.velocity = Owner.velocity
         self.held = False
         Owner.Gun = self
     
@@ -204,4 +206,7 @@ class Laser(Gun):
 class Rifle(Gun):
     def down(self, SURFACE = None):
         self.held = True
+        bullet = Ass(pygame.image.load('test.png'), self.position, self.velocity)
+        # add thrust to bullet
+        # new bullet texture
 main()
