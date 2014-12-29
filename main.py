@@ -28,7 +28,7 @@ def main():
     fpsClock = pygame.time.Clock()
 
     # set up the window
-    BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGTH), 0, 32)
+    BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
     STAGE = BACKGROUND.convert_alpha()
     PHYSICS = BACKGROUND.convert_alpha()
     pygame.display.set_caption('Assteroids')
