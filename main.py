@@ -2,10 +2,11 @@ import pygame, sys, math
 from pygame.locals import *
 from random import randint
 
-# COLOR = (RRR, GGG, BBB, AAA)
-BLACK   = (000, 000, 000)
-WHITE   = (255, 255, 255)
-CLEAR   = (000, 000, 000, 000)
+# COLOR   = (RRR, GGG, BBB, AAA)
+BLACK     = (000, 000, 000)
+WHITE     = (255, 255, 255)
+LASER_RED = (255, 000, 000, 200)
+CLEAR     = (000, 000, 000, 000)
 
 WINDOWWIDTH = 1340
 WINDOWHEIGHT = 700
@@ -33,14 +34,12 @@ def main():
     PHYSICS = BACKGROUND.convert_alpha()
     pygame.display.set_caption('Assteroids')
 
-    One = Actor(ai = "Player")
-    Laser = Gun(One)
 
-    BadAss1 = Badass()
-    BadAss2 = Badass()
-    BadAss3 = Badass()
-    BadAss4 = Badass()
-    BadAss5 = Badass()
+    One = Actor(pygame.image.load('test.png'))
+    Blaster = Laser(One)
+
+    BadAssList = []
+    count = 0
 
     while True: # the main game loop 
         
@@ -49,6 +48,12 @@ def main():
 
         inertia(ObjectDrawQueue)
         One.Aim()
+        # quick random gen
+        count += 1
+        if count == 60:
+            BadAssList.append(Ass(pygame.image.load('ship.png'), randomLocation()))
+            count = 0
+        
         pressedList = pygame.key.get_pressed()
        
        # <Movment>
@@ -101,14 +106,12 @@ def main():
         pygame.display.update()
         fpsClock.tick(FPS)
 
-def inertia(Objects): # takes the velocity of all objects and moves them over time
-    for Object in Objects:
-        Object.position[0] += Object.velocity[0]
-        Object.position[1] += Object.velocity[1]
-        Object.center[0] += Object.velocity[0]
-        Object.center[1] += Object.velocity[1]
-        if(Object.Gun != None):
-            Object.Gun.position = Object.center
+def inertia(RigidBodyList): # takes the velocity of all RigidBodies and moves them over time
+    for Body in RigidBodyList:
+        Body.position[0] += Body.velocity[0]
+        Body.position[1] += Body.velocity[1]
+        Body.center[0] += Body.velocity[0]
+        Body.center[1] += Body.velocity[1]
 
 def randomLocation():
     x = 0
@@ -122,68 +125,63 @@ def randomDirection():
     x = 0
     y = 0
     while ( x == 0 and y == 0):
-        x = randint(0,3)
-        y = randint(0,3)
+        x = randint(-5,5)
+        y = randint(-5,5)
     return (x, y)
 
-class Actor:
-    def __init__(self, spawn = CENTER, ai = "Player"):
-        self.sprite = pygame.image.load('test.png')
-        self.health = 100
+class RigidBody:
+    def __init__(self, Sprite, spawn = CENTER):
+        self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
-        self.center = [spawn[0] + 16, spawn[1] + 16]
         self.velocity = [0, 0]
+        self.Items= []
+        ObjectDrawQueue.append(self)
+        
+    def accelerate(self, direction, thrust):
+        self.velocity[0] += thrust * math.cos(direction)
+        self.velocity[1] += thrust * math.sin(direction)
+
+class Actor(RigidBody):
+    def __init__(self, Sprite, spawn = CENTER):
+        self.sprite = Sprite
+        self.position = [spawn[0], spawn[1]]
+        self.velocity = [0, 0]
+        self.Items= []
+        self.health = 100
+        self.center = [spawn[0] + 16, spawn[1] + 16]
         self.thrust = 0.25
-        self.ai = ai
         self.aim = pygame.mouse.get_pos()
-        self.Gun = None
         ObjectDrawQueue.append(self)
 
     def Aim(self):
         self.aim = pygame.mouse.get_pos()
         self.Gun.aim = pygame.mouse.get_pos()
+        self.Gun.position = self.center
 
-    def accelerate(self, direction):
-        self.velocity[0] += self.thrust * math.cos(direction)
-        self.velocity[1] += self.thrust * math.sin(direction)
-        
-    def brakes(self): # not working properly
-        self.velocity[0] -= self.thrust * math.cos(self.direction)
-        if self.velocity[0] < 0:
-            self.velocity[0] = 0
-        self.velocity[1] -= self.thrust * math.sin(self.direction)
-        if self.velocity[1] < 0:
-            self.velocity[1] = 0
-            
+    def accelerate(self, direction, thrust = None):
+        thrust = self.thrust
+        self.velocity[0] += thrust * math.cos(direction)
+        self.velocity[1] += thrust * math.sin(direction)
+
     def respawn(self, spawn = CENTER, preserveVelocity = False):
         self.position = [spawn[0], spawn[1]]
         self.center = [spawn[0] + 16, spawn[1] + 16]
-        self.Gun.position = [spawn[0] + 16, spawn[1] + 16]
         if preserveVelocity == False:
             self.velocity = [0, 0]
             
     def damage(self):
         pass
     
-class Badass(Actor):
-    def __init__(self):
-        self.sprite = pygame.image.load(BUTTASSPATH)
-        self.health = 100
-        self.spawn = randomLocation()
-        self.position = [self.spawn[0], self.spawn[1]]
-        self.center = [self.spawn[0] + BUTTASSWIDTH/2, self.spawn[1] + BUTTASSHEIGHT/2]
+class Ass(RigidBody):
+    def __init__(self, Sprite, spawn = CENTER):
+        self.sprite = Sprite
+        self.position = [spawn[0], spawn[1]]
+        self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
+        self.velocity = [0, 0]
+        self.Items= []
         self.velocity = randomDirection()
-        self.thrust = 1
-        self.Gun = None
-        self.ai = "Badass"
         ObjectDrawQueue.append(self)
 
-    def Aim(self):
-        self.aim = 0
-    
-
-class Goodass(Actor):
-    pass
 class Gun:
     def __init__(self, Owner = None):
         self.aim = Owner.aim
@@ -191,12 +189,20 @@ class Gun:
         self.held = False
         Owner.Gun = self
     
-    def down(self):
+    def down(self, SURFACE = None):
         self.held = True
         
-    def up(self):
+    def up(self, SURFACE = None):
         self.held = False
     
-    def hold(self, SURFACE):
-        pygame.draw.line(SURFACE, WHITE, self.position, self.aim, 3)
+    def hold(self, SURFACE = None):
+        pass
+
+class Laser(Gun):
+    def hold(self, SURFACE = None):
+        pygame.draw.line(SURFACE, LASER_RED, self.position, self.aim, 3)
+
+class Rifle(Gun):
+    def down(self, SURFACE = None):
+        self.held = True
 main()
