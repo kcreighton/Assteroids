@@ -48,7 +48,7 @@ def main():
         STAGE.fill(CLEAR)
 
         inertia(ObjectDrawQueue)
-        One.newAim()
+        One.Aim()
         pressedList = pygame.key.get_pressed()
        
        # <Movment>
@@ -107,7 +107,8 @@ def inertia(Objects): # takes the velocity of all objects and moves them over ti
         Object.position[1] += Object.velocity[1]
         Object.center[0] += Object.velocity[0]
         Object.center[1] += Object.velocity[1]
-        Object.Gun.position = Object.center
+        if(Object.Gun != None):
+            Object.Gun.position = Object.center
 
 def randomLocation():
     x = 0
@@ -134,23 +135,19 @@ class Actor:
         self.velocity = [0, 0]
         self.thrust = 0.25
         self.ai = ai
-        if ai == "Player":
-            self.aim = pygame.mouse.get_pos()
-        else:
-            self.aim = None
+        self.aim = pygame.mouse.get_pos()
         self.Gun = None
         ObjectDrawQueue.append(self)
 
-    def newAim(self):
-        if self.ai == "Player":
-            self.aim = pygame.mouse.get_pos()
-            self.Gun.aim = pygame.mouse.get_pos()
+    def Aim(self):
+        self.aim = pygame.mouse.get_pos()
+        self.Gun.aim = pygame.mouse.get_pos()
 
     def accelerate(self, direction):
         self.velocity[0] += self.thrust * math.cos(direction)
         self.velocity[1] += self.thrust * math.sin(direction)
         
-    def brakes(self): # no tworking properly
+    def brakes(self): # not working properly
         self.velocity[0] -= self.thrust * math.cos(self.direction)
         if self.velocity[0] < 0:
             self.velocity[0] = 0
@@ -169,14 +166,21 @@ class Actor:
         pass
     
 class Badass(Actor):
-    def __init__(self, spawn = None):
+    def __init__(self):
         self.sprite = pygame.image.load(BUTTASSPATH)
         self.health = 100
-        self.position = randomLocation()
-        self.center = [spawn[0] + BUTTASSWIDTH/2, spawn[1] + BUTTASSHEIGHT/2]
+        self.spawn = randomLocation()
+        self.position = [self.spawn[0], self.spawn[1]]
+        self.center = [self.spawn[0] + BUTTASSWIDTH/2, self.spawn[1] + BUTTASSHEIGHT/2]
         self.velocity = randomDirection()
         self.thrust = 1
-        ObjectDrawQueue.append(self)   
+        self.Gun = None
+        self.ai = "Badass"
+        ObjectDrawQueue.append(self)
+
+    def Aim(self):
+        self.aim = 0
+    
 
 class Goodass(Actor):
     pass
