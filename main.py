@@ -36,7 +36,7 @@ def main():
 
 
     One = Actor(pygame.image.load('test.png'))
-    Blaster = Laser(One)
+    Blaster = Rifle(One)
 
     BadAssList = []
     count = 0
@@ -51,7 +51,7 @@ def main():
         # quick random gen
         count += 1
         if count == 60:
-            BadAssList.append(Ass(pygame.image.load('ship.png'), randomLocation(), randomVelocity())
+            BadAssList.append(BadAss(pygame.image.load('ship.png'), randomLocation(), randomVelocity()))
             count = 0
         
         pressedList = pygame.key.get_pressed()
@@ -173,7 +173,16 @@ class Actor(RigidBody):
     def damage(self):
         pass
     
-class Ass(RigidBody):
+class BadAss(RigidBody):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
+        self.sprite = Sprite
+        self.position = [spawn[0], spawn[1]]
+        self.velocity = [velocity[0], velocity[1]]
+        self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
+        self.Items= []
+        ObjectDrawQueue.append(self)
+        
+class GoodAss(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
@@ -206,7 +215,7 @@ class Laser(Gun):
 class Rifle(Gun):
     def down(self, SURFACE = None):
         self.held = True
-        bullet = Ass(pygame.image.load('test.png'), self.position, self.velocity)
+        bullet = BadAss(pygame.image.load('test.png'), self.position, self.velocity)
         # add thrust to bullet
         # new bullet texture
 main()
