@@ -157,6 +157,7 @@ class Actor(RigidBody):
         self.aim = pygame.mouse.get_pos()
         self.Gun.aim = pygame.mouse.get_pos()
         self.Gun.position = self.center
+        self.Gun.velocity = self.velocity
 
     def accelerate(self, direction, thrust = None):
         thrust = self.thrust
