@@ -47,7 +47,7 @@ def main():
         STAGE.fill(CLEAR)
 
         inertia(ObjectDrawQueue)
-        One.Aim()
+        One.adjustAim()
         # quick random gen
         count += 1
         if count == 60:
@@ -80,7 +80,7 @@ def main():
         # </Movement>
             
         if pressedList[K_SPACE] ==  True:
-            One.brakes()
+            pass
         if pressedList[K_r] ==  True:
             One.respawn()
         if pressedList[K_t] ==  True:
@@ -144,20 +144,21 @@ class RigidBody:
 class Actor(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
-        self.position = [spawn[0], spawn[1]]
+        self.position = [spawn[0] - 16, spawn[1] - 16]
         self.velocity = [velocity[0], velocity[1]]
-        self.center = [spawn[0] + 16, spawn[1] + 16]
+        self.center = [spawn[0], spawn[1]]
         self.Items= []
         self.health = 100
         self.thrust = 0.25
         self.aim = pygame.mouse.get_pos()
         ObjectDrawQueue.append(self)
 
-    def Aim(self):
+    def adjustAim(self):
         self.aim = pygame.mouse.get_pos()
         self.Gun.aim = pygame.mouse.get_pos()
         self.Gun.position = self.center
         self.Gun.velocity = self.velocity
+        self.Gun.getReticule()
 
     def accelerate(self, direction, thrust = None):
         thrust = self.thrust
@@ -192,13 +193,33 @@ class GoodAss(RigidBody):
         self.Items= []
         ObjectDrawQueue.append(self)
 
+class Bullet(RigidBody):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
+        self.sprite = Sprite
+        self.position = [spawn[0] - 16, spawn[1] - 16]
+        self.velocity = [velocity[0], velocity[1]]
+        self.center = [spawn[0], spawn[1]]
+        self.thrust = 0
+        self.Items = []
+        self.Owner = None
+        ObjectDrawQueue.append(self)
+
 class Gun:
     def __init__(self, Owner = None):
         self.aim = Owner.aim
+        self.reticule = []
+        self.reticule.append(Owner.aim[0] - Owner.position[0])
+        self.reticule.append(Owner.aim[1] - Owner.position[1])
         self.position = Owner.center
         self.velocity = Owner.velocity
         self.held = False
+        self.accuracy = 0
+        self.Owner = Owner
         Owner.Gun = self
+
+    def getReticule(self): # make variable
+        self.reticule[0] = (self.aim[0] - self.position[0])
+        self.reticule[1] = (self.aim[1] - self.position[1])
     
     def down(self, SURFACE = None):
         self.held = True
@@ -209,14 +230,26 @@ class Gun:
     def hold(self, SURFACE = None):
         pass
 
-class Laser(Gun):
+class Laser(Gun): 
     def hold(self, SURFACE = None):
         pygame.draw.line(SURFACE, LASER_RED, self.position, self.aim, 3)
 
 class Rifle(Gun):
     def down(self, SURFACE = None):
         self.held = True
-        bullet = BadAss(pygame.image.load('test.png'), self.position, self.velocity)
-        # add thrust to bullet
-        # new bullet texture
+        Bull = Bullet(pygame.image.load('test.png'), self.position, self.velocity)
+        Bull.Owner = self.Owner
+        Bull.thrust = 25
+        if self.reticule[0] < 0:
+            Bull.direction = math.atan(self.reticule[1]/self.reticule[0]) + math.pi
+            Bull.velocity[0] += Bull.thrust * math.cos(Bull.direction)
+            Bull.velocity[1] += Bull.thrust * math.sin(Bull.direction)
+        elif self.reticule[0] > 0:
+            Bull.direction = math.atan(self.reticule[1]/self.reticule[0])
+            Bull.velocity[0] += Bull.thrust * math.cos(Bull.direction)
+            Bull.velocity[1] += Bull.thrust * math.sin(Bull.direction)
+        elif self.reticule[0] == 0 and self.reticule[1] < 0:
+            Bull.velocity[1] -= Bull.thrust
+        elif self.reticule[0] == 0 and self.reticule[1] > 0:
+            Bull.velocity[1] += Bull.thrust
 main()
