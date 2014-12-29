@@ -1,14 +1,23 @@
 import pygame, sys, math
 from pygame.locals import *
+from random import randint
 
 # COLOR = (RRR, GGG, BBB, AAA)
 BLACK   = (000, 000, 000)
 WHITE   = (255, 255, 255)
 CLEAR   = (000, 000, 000, 000)
 
-WINDOWWIDTH = 1800
-WINDOWHEIGTH = 1000
-CENTER = (WINDOWWIDTH/2, WINDOWHEIGTH/2)
+WINDOWWIDTH = 1340
+WINDOWHEIGHT = 700
+CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+
+BUTTASSPATH = ".\images\ButtAssSmall.png"
+BUTTASSWIDTH = 73
+BUTTASSHEIGHT = 100
+
+DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
+DONKEYASSWIDTH = 98
+DONKEYASSHEIGHT = 138
 
 ObjectDrawQueue = []
 
@@ -19,13 +28,19 @@ def main():
     fpsClock = pygame.time.Clock()
 
     # set up the window
-    BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGTH), 0, 32)
+    BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
     STAGE = BACKGROUND.convert_alpha()
     PHYSICS = BACKGROUND.convert_alpha()
     pygame.display.set_caption('Assteroids')
 
     One = Actor()
-    One.aim()
+    One.Aim()
+
+    BadAss1 = Badass()
+    BadAss2 = Badass()
+    BadAss3 = Badass()
+    BadAss4 = Badass()
+    BadAss5 = Badass()
 
     while True: # the main game loop 
         
@@ -33,7 +48,7 @@ def main():
         STAGE.fill(CLEAR)
 
         inertia(ObjectDrawQueue)
-        One.newAim()
+        One.Aim()
         pressedList = pygame.key.get_pressed()
        
        # <Movment>
@@ -93,32 +108,37 @@ def inertia(Objects): # takes the velocity of all objects and moves them over ti
         Object.center[0] += Object.velocity[0]
         Object.center[1] += Object.velocity[1]
 
+def randomLocation():
+    return [randint(0,WINDOWWIDTH), randint(0,WINDOWHEIGHT)]
+
+def randomDirection():
+    x = 0
+    y = 0
+    while ( x == 0 and y == 0):
+        x = randint(0,3)
+        y = randint(0,3)
+    return [x, y]
+
 class Actor:
-    def __init__(self, spawn = CENTER, ai = "Player"):
+    def __init__(self, spawn = CENTER, actorType = "Player"):
         self.sprite = pygame.image.load('test.png')
         self.health = 100
         self.position = [spawn[0], spawn[1]]
         self.center = [spawn[0] + 16, spawn[1] + 16]
         self.velocity = [0, 0]
         self.thrust = 0.25
-        self.ai = ai
-        if ai == "Player":
-            self.aim = pygame.mouse.get_pos()
-        else:
-            self.aim = None
+        self.aim = pygame.mouse.get_pos()
         self.Gun = Gun(self)
         ObjectDrawQueue.append(self)
 
-    def newAim(control):
-        if self.ai == "Player":
-            self.aim = pygame.mouse.get_pos()
-            self.Gun.aim = pygame.mouse.get_pos()
+    def Aim(self):
+        self.aim = pygame.mouse.get_pos()
 
     def accelerate(self, direction):
         self.velocity[0] += self.thrust * math.cos(direction)
         self.velocity[1] += self.thrust * math.sin(direction)
         
-    def brakes(self): # no tworking properly
+    def brakes(self): # not working properly
         self.velocity[0] -= self.thrust * math.cos(self.direction)
         if self.velocity[0] < 0:
             self.velocity[0] = 0
@@ -134,6 +154,20 @@ class Actor:
             
     def damage(self):
         pass
+    
+class Badass(Actor):
+    def __init__(self, spawn=randomLocation()):
+        self.actorType = "Badass"
+        self.sprite = pygame.image.load(BUTTASSPATH)
+        self.health = 100
+        self.position = [spawn[0], spawn[1]]
+        self.center = [spawn[0] + BUTTASSWIDTH/2, spawn[1] + BUTTASSHEIGHT/2]
+        self.velocity = randomDirection()
+        self.thrust = 1
+        ObjectDrawQueue.append(self)    
+
+class GoodAss(Actor):
+    pass
 
 class Gun:
     def __init__(self, Owner = None):
