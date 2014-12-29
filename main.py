@@ -24,8 +24,8 @@ def main():
     PHYSICS = BACKGROUND.convert_alpha()
     pygame.display.set_caption('Assteroids')
 
-    One = Actor()
-    One.aim()
+    One = Actor(ai = "Player")
+    Laser = Gun(One)
 
     while True: # the main game loop 
         
@@ -92,6 +92,7 @@ def inertia(Objects): # takes the velocity of all objects and moves them over ti
         Object.position[1] += Object.velocity[1]
         Object.center[0] += Object.velocity[0]
         Object.center[1] += Object.velocity[1]
+        Object.Gun.position = Object.center
 
 class Actor:
     def __init__(self, spawn = CENTER, ai = "Player"):
@@ -106,10 +107,10 @@ class Actor:
             self.aim = pygame.mouse.get_pos()
         else:
             self.aim = None
-        self.Gun = Gun(self)
+        self.Gun = None
         ObjectDrawQueue.append(self)
 
-    def newAim(control):
+    def newAim(self):
         if self.ai == "Player":
             self.aim = pygame.mouse.get_pos()
             self.Gun.aim = pygame.mouse.get_pos()
@@ -129,6 +130,7 @@ class Actor:
     def respawn(self, spawn = CENTER, preserveVelocity = False):
         self.position = [spawn[0], spawn[1]]
         self.center = [spawn[0] + 16, spawn[1] + 16]
+        self.Gun.position = [spawn[0] + 16, spawn[1] + 16]
         if preserveVelocity == False:
             self.velocity = [0, 0]
             
