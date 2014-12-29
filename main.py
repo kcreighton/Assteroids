@@ -51,7 +51,7 @@ def main():
         # quick random gen
         count += 1
         if count == 60:
-            BadAssList.append(Ass(pygame.image.load('ship.png'), randomLocation()))
+            BadAssList.append(Ass(pygame.image.load('ship.png'), randomLocation(), randomVelocity())
             count = 0
         
         pressedList = pygame.key.get_pressed()
@@ -121,7 +121,7 @@ def randomLocation():
         y = randint(0,WINDOWHEIGHT)
     return (x, y)
 
-def randomDirection():
+def randomVelocity():
     x = 0
     y = 0
     while ( x == 0 and y == 0):
@@ -130,10 +130,10 @@ def randomDirection():
     return (x, y)
 
 class RigidBody:
-    def __init__(self, Sprite, spawn = CENTER):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
-        self.velocity = [0, 0]
+        self.velocity = [velocity[0], velocity[1]]
         self.Items= []
         ObjectDrawQueue.append(self)
         
@@ -142,13 +142,13 @@ class RigidBody:
         self.velocity[1] += thrust * math.sin(direction)
 
 class Actor(RigidBody):
-    def __init__(self, Sprite, spawn = CENTER):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
-        self.velocity = [0, 0]
+        self.velocity = [velocity[0], velocity[1]]
+        self.center = [spawn[0] + 16, spawn[1] + 16]
         self.Items= []
         self.health = 100
-        self.center = [spawn[0] + 16, spawn[1] + 16]
         self.thrust = 0.25
         self.aim = pygame.mouse.get_pos()
         ObjectDrawQueue.append(self)
@@ -173,13 +173,12 @@ class Actor(RigidBody):
         pass
     
 class Ass(RigidBody):
-    def __init__(self, Sprite, spawn = CENTER):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
+        self.velocity = [velocity[0], velocity[1]]
         self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
-        self.velocity = [0, 0]
         self.Items= []
-        self.velocity = randomDirection()
         ObjectDrawQueue.append(self)
 
 class Gun:
