@@ -1,14 +1,23 @@
 import pygame, sys, math
 from pygame.locals import *
+from random import randint
 
 # COLOR = (RRR, GGG, BBB, AAA)
 BLACK   = (000, 000, 000)
 WHITE   = (255, 255, 255)
 CLEAR   = (000, 000, 000, 000)
 
-WINDOWWIDTH = 1800
-WINDOWHEIGTH = 1000
-CENTER = (WINDOWWIDTH/2, WINDOWHEIGTH/2)
+WINDOWWIDTH = 1340
+WINDOWHEIGHT = 700
+CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
+
+BUTTASSPATH = ".\images\ButtAssSmall.png"
+BUTTASSWIDTH = 73
+BUTTASSHEIGHT = 100
+
+DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
+DONKEYASSWIDTH = 98
+DONKEYASSHEIGHT = 138
 
 ObjectDrawQueue = []
 
@@ -26,6 +35,12 @@ def main():
 
     One = Actor(ai = "Player")
     Laser = Gun(One)
+
+    BadAss1 = Badass()
+    BadAss2 = Badass()
+    BadAss3 = Badass()
+    BadAss4 = Badass()
+    BadAss5 = Badass()
 
     while True: # the main game loop 
         
@@ -94,6 +109,22 @@ def inertia(Objects): # takes the velocity of all objects and moves them over ti
         Object.center[1] += Object.velocity[1]
         Object.Gun.position = Object.center
 
+def randomLocation():
+    x = 0
+    y = 0
+    while ( x == 0 and y == 0):
+        x = randint(0,WINDOWWIDTH)
+        y = randint(0,WINDOWHEIGHT)
+    return (x, y)
+
+def randomDirection():
+    x = 0
+    y = 0
+    while ( x == 0 and y == 0):
+        x = randint(0,3)
+        y = randint(0,3)
+    return (x, y)
+
 class Actor:
     def __init__(self, spawn = CENTER, ai = "Player"):
         self.sprite = pygame.image.load('test.png')
@@ -136,7 +167,19 @@ class Actor:
             
     def damage(self):
         pass
+    
+class Badass(Actor):
+    def __init__(self, spawn = None):
+        self.sprite = pygame.image.load(BUTTASSPATH)
+        self.health = 100
+        self.position = randomLocation()
+        self.center = [spawn[0] + BUTTASSWIDTH/2, spawn[1] + BUTTASSHEIGHT/2]
+        self.velocity = randomDirection()
+        self.thrust = 1
+        ObjectDrawQueue.append(self)   
 
+class Goodass(Actor):
+    pass
 class Gun:
     def __init__(self, Owner = None):
         self.aim = Owner.aim
