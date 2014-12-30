@@ -1,26 +1,19 @@
 import pygame, sys, math
 from pygame.locals import *
 from random import randint
-
-# COLORS  = (RRR, GGG, BBB, AAA)
-BLACK     = (000, 000, 000)
-WHITE     = (255, 255, 255)
-LASER_RED = (255, 000, 000, 100)
-CLEAR     = (000, 000, 000, 000)
-
-WINDOWWIDTH = 1340
-WINDOWHEIGHT = 700
-CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
-
-BUTTASSPATH = ".\images\ButtAssSmall.png"
-DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
+from rigidBody import *
+from assUtil import *
+from asses import *
+from assConstants import *
+from actor import *
 
 # set up the stage
-BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
+BACKGROUND = pygame.display.set_mode((assConstants.WINDOWWIDTH, assConstants.WINDOWHEIGHT), 0, 32)
 STAGE = BACKGROUND.convert_alpha()
 PHYSICS = BACKGROUND.convert_alpha() # invisible layer for colision detection
 pygame.display.set_caption('Assteroids')
 ObjectDrawQueue = [] # placment list
+BadAssList = []
 
 def main():
     pygame.init()
@@ -31,9 +24,9 @@ def main():
 
 # create props
     One = Actor(pygame.image.load('test.png'))
+    ObjectDrawQueue.append(One)
     Rifle = Kinetic(One)
     Rifle.propulsion = 30
-    BadAssList = []
     
     # quick random gen (implement better later)
     count = 0
@@ -41,9 +34,9 @@ def main():
 # the main game loop
     while True:
     # clear stage
-        BACKGROUND.fill(BLACK)
-        STAGE.fill(CLEAR)
-        PHYSICS.fill(CLEAR)
+        BACKGROUND.fill(assConstants.BLACK)
+        STAGE.fill(assConstants.CLEAR)
+        PHYSICS.fill(assConstants.CLEAR)
         
     # constant events
         physics(ObjectDrawQueue)
@@ -53,7 +46,7 @@ def main():
         # quick random gen (implement better later)
         count += 1
         if count == 60:
-            BadAssList.append(BadAss(pygame.image.load('ship.png')))
+            newDefaultBadass()
             count = 0
     # continuous events
         # movement
@@ -113,7 +106,17 @@ def main():
         BACKGROUND.blit(STAGE, (0, 0))
         pygame.display.update()
         fpsClock.tick(FPS)
-        
+
+def newDefaultBadass():
+    newAss = BadAss(pygame.image.load('ship.png'))
+    BadAssList.append(newAss)
+    ObjectDrawQueue.append(newAss)
+
+def newCustomBadass(imagePath):
+    newAss = BadAss(pygame.image.load(imagePath))
+    BadAssList.append(newAss)
+    ObjectDrawQueue.append(newAss)
+    
 # called constantly # takes the velocity of all RigidBodies and moves them over time
 def physics(RigidBodyList):
     for Body in RigidBodyList:
@@ -122,117 +125,7 @@ def physics(RigidBodyList):
         Body.center[0] += Body.velocity[0]
         Body.center[1] += Body.velocity[1]
         Body.lastCenter = [ (Body.center[0] - Body.velocity[0]*2), (Body.center[1] - Body.velocity[1]*2) ]
-            
-def randomLocation():
-    x = randint(0,WINDOWWIDTH)
-    y = randint(0,WINDOWHEIGHT)
-    return [x, y]
 
-def randomVelocity(rangeX = 5, rangeY = 5):
-    x = randint(-rangeX, rangeX)
-    y = randint(-rangeY, rangeY)
-    return [x, y]
-
-class RigidBody: # physics objects # need to add collision
-    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
-        self.sprite = Sprite
-        self.size = Sprite.get_size()
-        self.center = [spawn[0], spawn[1]]
-        self.lastCenter = self.center
-        self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
-        self.velocity = [velocity[0], velocity[1]]
-        self.Items= []
-        self.trail = False
-        ObjectDrawQueue.append(self)
-        
-    def accelerate(self, direction, thrust):
-        self.velocity[0] += thrust * math.cos(direction)
-        self.velocity[1] += thrust * math.sin(direction)
-
-    def hit(self):
-        pass
-    
-class Actor(RigidBody): # intelegent bodies # need AI owners
-    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
-        self.sprite = Sprite
-        self.size = Sprite.get_size()
-        self.center = [spawn[0], spawn[1]]
-        self.lastCenter = self.center
-        self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
-        self.velocity = [velocity[0], velocity[1]]
-        self.Items= []
-        self.health = 100
-        self.thrust = 0.25
-        self.aim = [0, 0] # relative to screen (updated costantly)
-        self.Gun = None
-        self.trail = False
-        ObjectDrawQueue.append(self)
-
-# called constantly # updates targeting for actor and their gun # called in main loop
-    def adjustAim(self, target):
-        self.aim = target
-        if self.Gun != None:
-            self.Gun.updateAim(target)
-
-    def accelerate(self, direction, thrust = None):
-        thrust = self.thrust
-        self.velocity[0] += thrust * math.cos(direction)
-        self.velocity[1] += thrust * math.sin(direction)
-
-    def respawn(self, spawn = CENTER, preserveVelocity = False):
-        self.position = [spawn[0], spawn[1]]
-        self.center = [spawn[0] + 16, spawn[1] + 16]
-        if preserveVelocity == False:
-            self.velocity = [0, 0]
-            self.Gun.velocity = [0, 0]
-            
-    def hit(self):
-        pass
-    
-class BadAss(RigidBody): # thinking of making Ass class with good/bad children?
-    def __init__(self, Sprite, spawn = None, velocity = None):
-        self.sprite = Sprite
-        self.size = Sprite.get_size()
-        if spawn == None:
-            self.center = randomLocation()
-            self.position = [self.center[0] - (self.size[0]/2), self.center[1] - (self.size[1]/2)]
-        else:
-            self.center = [spawn[0], spawn[1]]
-            self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
-        if velocity == None:
-            self.velocity = randomVelocity()
-        else:
-            self.velocity = velocity
-        self.lastCenter = self.center
-        self.Items= []
-        self.trail = False
-        ObjectDrawQueue.append(self)
-        
-    def hit(self):
-        pass
-    
-class GoodAss(RigidBody):
-    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
-        self.sprite = Sprite
-        self.size = Sprite.get_size()
-        if spawn == None:
-            self.center = randomLocation()
-            self.position = [self.center[0] - (self.size[0]/2), self.center[1] - (self.size[1]/2)]
-        else:
-            self.center = [spawn[0], spawn[1]]
-            self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
-        if velocity == None:
-            self.velocity = randomVelocity()
-        else:
-            self.velocity = velocity
-        self.lastCenter = self.center
-        self.Items= []
-        self.trail = False
-        ObjectDrawQueue.append(self)
-        
-    def hit(self):
-        pass
-    
 class Projectile(RigidBody):
     def __init__(self, Owner, Sprite = None):
         self.center = [Owner.position[0], Owner.position[1]]
