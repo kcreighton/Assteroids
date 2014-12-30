@@ -51,7 +51,7 @@ def main():
         
     # constant events
         inertia(ObjectDrawQueue)
-        One.adjustAim(pygame.mouse.get_pos())
+        One.adjustAim(pygame.mouse.get_pos()) # make AI controller for this
         
         # quick random gen (implement better later)
         count += 1
@@ -113,8 +113,9 @@ def main():
         BACKGROUND.blit(STAGE, (0, 0))
         pygame.display.update()
         fpsClock.tick(FPS)
-
-def inertia(RigidBodyList): # takes the velocity of all RigidBodies and moves them over time
+        
+# called constantly # takes the velocity of all RigidBodies and moves them over time
+def inertia(RigidBodyList):
     for Body in RigidBodyList:
         Body.position[0] += Body.velocity[0]
         Body.position[1] += Body.velocity[1]
@@ -131,7 +132,7 @@ def randomVelocity(rangeX = 5, rangeY = 5):
     y = randint(-rangeY, rangeY)
     return [x, y]
 
-class RigidBody:
+class RigidBody: # physics objects # need to add collision
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0], spawn[1]]
@@ -146,7 +147,7 @@ class RigidBody:
     def hit(self):
         pass
     
-class Actor(RigidBody):
+class Actor(RigidBody): # intelegent bodies # need AI owners
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.position = [spawn[0] - 16, spawn[1] - 16]
@@ -155,11 +156,11 @@ class Actor(RigidBody):
         self.Items= []
         self.health = 100
         self.thrust = 0.25
-        self.aim = [0, 0] # point relative to screen (updated costantly)
+        self.aim = [0, 0] # relative to screen (updated costantly)
         self.Gun = None
         ObjectDrawQueue.append(self)
 
-# called constantly
+# called constantly # updates targeting for actor and their gun # called in main loop
     def adjustAim(self, target):
         self.aim = target
         if self.Gun != None:
@@ -180,8 +181,7 @@ class Actor(RigidBody):
     def hit(self):
         pass
     
-    
-class BadAss(RigidBody):
+class BadAss(RigidBody): # thinking of making Ass class with good/bad children?
     def __init__(self, Sprite, spawn = None, velocity = None):
         self.sprite = Sprite
         position = []
@@ -251,7 +251,7 @@ class Projectile(RigidBody):
     def hit(self):
         pass
     
-class Gun:
+class Gun: # projectile creator
     def __init__(self, Owner = None):
         self.reticule = [] # point relative to gun (updated costantly)
         self.reticule.append(Owner.aim[0] - Owner.position[0])
@@ -260,11 +260,11 @@ class Gun:
         self.velocity = Owner.velocity
         self.propulsion = 1
         self.held = False
-        self.accuracy = 0
+        self.accuracy = 0 # use to create variance in reticule from Owner's aim
         self.Owner = Owner
         Owner.Gun = self
 
-# called constantly
+# called constantly # updates targeting of gun # called by Owner's adjustAim()
     def updateAim(self, aim):
         self.position = self.Owner.center
         self.velocity = self.Owner.velocity
