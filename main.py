@@ -2,7 +2,7 @@ import pygame, sys, math
 from pygame.locals import *
 from random import randint
 
-# COLOR   = (RRR, GGG, BBB, AAA)
+# COLORS  = (RRR, GGG, BBB, AAA)
 BLACK     = (000, 000, 000)
 WHITE     = (255, 255, 255)
 LASER_RED = (255, 000, 000, 200)
@@ -20,44 +20,47 @@ DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
 DONKEYASSWIDTH = 98
 DONKEYASSHEIGHT = 138
 
-ObjectDrawQueue = []
+# set up the stage
+BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
+STAGE = BACKGROUND.convert_alpha()
+PHYSICS = BACKGROUND.convert_alpha() # invisible layer for colision detection
+pygame.display.set_caption('Assteroids')
+ObjectDrawQueue = [] # placment list
 
 def main():
     pygame.init()
 
-    FPS = 60 # frames per second setting
+# frames per second setting
+    FPS = 60
     fpsClock = pygame.time.Clock()
 
-    # set up the window
-    BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
-    STAGE = BACKGROUND.convert_alpha()
-    PHYSICS = BACKGROUND.convert_alpha()
-    pygame.display.set_caption('Assteroids')
-
-
+# create props
     One = Actor(pygame.image.load('test.png'))
     Blaster = Rifle(One)
-
+    Blaster.propulsion = 25
     BadAssList = []
+    
+    # quick random gen (implement better later)
     count = 0
 
-    while True: # the main game loop 
-        
+# the main game loop
+    while True:
+    # clear stage
         BACKGROUND.fill(BLACK)
         STAGE.fill(CLEAR)
-
+        
+    # constant events
         inertia(ObjectDrawQueue)
-        One.adjustAim()
-        # quick random gen
+        One.adjustAim(pygame.mouse.get_pos())
+        
+        # quick random gen (implement better later)
         count += 1
         if count == 60:
             BadAssList.append(BadAss(pygame.image.load('ship.png'), randomLocation(), randomVelocity()))
             count = 0
-        
+    # continuous events
+        # movement
         pressedList = pygame.key.get_pressed()
-       
-       # <Movment>
-        
         if pressedList[K_w] ==  True:
             if pressedList[K_d] ==  True:
                 One.accelerate(7*math.pi/4)
@@ -77,8 +80,6 @@ def main():
         elif pressedList[K_a] ==  True:
             One.accelerate(math.pi)
             
-        # </Movement>
-            
         if pressedList[K_SPACE] ==  True:
             pass
         if pressedList[K_r] ==  True:
@@ -86,23 +87,30 @@ def main():
         if pressedList[K_t] ==  True:
             One.respawn(preserveVelocity = True)
         
+        # shooting
         if One.Gun.held ==  True:
-           One.Gun.hold(STAGE)
-            
+           One.Gun.hold()
+    
+    # instant events
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+                
+            # shooting
             if event.type == MOUSEBUTTONDOWN:
                 One.Gun.down()
             if event.type == MOUSEBUTTONUP:
                 One.Gun.up()
+                
             # more events go here
-            
+    
+    # populate stage
         for Object in ObjectDrawQueue:
             STAGE.blit(Object.sprite, Object.position)
+            
+    # take picture
         BACKGROUND.blit(STAGE, (0, 0))
-        
         pygame.display.update()
         fpsClock.tick(FPS)
 
@@ -121,12 +129,12 @@ def randomLocation():
         y = randint(0,WINDOWHEIGHT)
     return (x, y)
 
-def randomVelocity():
+def randomVelocity(rangeX = 5, rangeY = 5):
     x = 0
     y = 0
     while ( x == 0 and y == 0):
-        x = randint(-5,5)
-        y = randint(-5,5)
+        x = randint(-rangeX, rangeX)
+        y = randint(-rangeY, rangeY)
     return (x, y)
 
 class RigidBody:
@@ -141,6 +149,9 @@ class RigidBody:
         self.velocity[0] += thrust * math.cos(direction)
         self.velocity[1] += thrust * math.sin(direction)
 
+    def hit(self):
+        pass
+    
 class Actor(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
@@ -150,15 +161,15 @@ class Actor(RigidBody):
         self.Items= []
         self.health = 100
         self.thrust = 0.25
-        self.aim = pygame.mouse.get_pos()
+        self.aim = [0, 0] # point relative to screen (updated costantly)
+        self.Gun = None
         ObjectDrawQueue.append(self)
 
-    def adjustAim(self):
-        self.aim = pygame.mouse.get_pos()
-        self.Gun.aim = pygame.mouse.get_pos()
-        self.Gun.position = self.center
-        self.Gun.velocity = self.velocity
-        self.Gun.getReticule()
+# called constantly
+    def adjustAim(self, target):
+        self.aim = target
+        if self.Gun != None:
+            self.Gun.updateAim(target)
 
     def accelerate(self, direction, thrust = None):
         thrust = self.thrust
@@ -172,7 +183,7 @@ class Actor(RigidBody):
             self.velocity = [0, 0]
             self.Gun.velocity = [0, 0]
             
-    def damage(self):
+    def hit(self):
         pass
     
 class BadAss(RigidBody):
@@ -184,6 +195,9 @@ class BadAss(RigidBody):
         self.Items= []
         ObjectDrawQueue.append(self)
         
+    def hit(self):
+        pass
+    
 class GoodAss(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
@@ -192,64 +206,82 @@ class GoodAss(RigidBody):
         self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
         self.Items= []
         ObjectDrawQueue.append(self)
-
-class Bullet(RigidBody):
-    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
+        
+    def hit(self):
+        pass
+    
+class Projectile(RigidBody):
+    def __init__(self, Sprite, Owner):
         self.sprite = Sprite
-        self.position = [spawn[0] - 16, spawn[1] - 16]
-        self.velocity = [velocity[0], velocity[1]]
-        self.center = [spawn[0], spawn[1]]
-        self.thrust = 0
+        self.position = []
+        self.position.append(Owner.position[0] - 16)
+        self.position.append(Owner.position[1] - 16)
+        self.velocity = []
+        self.velocity.append(Owner.velocity[0])
+        self.velocity.append(Owner.velocity[1])
+        self.center = []
+        self.center.append(Owner.position[0])
+        self.center.append(Owner.position[1])
         self.Items = []
-        self.Owner = None
+        self.Owner = Owner
         ObjectDrawQueue.append(self)
 
+    def fire(self):
+        if self.Owner.reticule[0] < 0:
+            self.direction = math.atan(self.Owner.reticule[1]/self.Owner.reticule[0]) + math.pi
+            self.velocity[0] += self.Owner.propulsion * math.cos(self.direction)
+            self.velocity[1] += self.Owner.propulsion * math.sin(self.direction)
+        elif self.Owner.reticule[0] > 0:
+            self.direction = math.atan(self.Owner.reticule[1]/self.Owner.reticule[0])
+            self.velocity[0] += self.Owner.propulsion * math.cos(self.direction)
+            self.velocity[1] += self.Owner.propulsion * math.sin(self.direction)
+        elif self.Owner.reticule[0] == 0 and self.Owner.reticule[1] < 0:
+            self.velocity[1] -= self.Owner.propulsion
+        elif self.Owner.reticule[0] == 0 and self.Owner.reticule[1] > 0:
+            self.velocity[1] += self.Owner.propulsion
+
+    def hit(self):
+        pass
+    
 class Gun:
     def __init__(self, Owner = None):
-        self.aim = Owner.aim
-        self.reticule = []
+        self.reticule = [] # point relative to gun (updated costantly)
         self.reticule.append(Owner.aim[0] - Owner.position[0])
         self.reticule.append(Owner.aim[1] - Owner.position[1])
         self.position = Owner.center
         self.velocity = Owner.velocity
+        self.propulsion = 1
         self.held = False
         self.accuracy = 0
         self.Owner = Owner
         Owner.Gun = self
 
-    def getReticule(self): # make variable
-        self.reticule[0] = (self.aim[0] - self.position[0])
-        self.reticule[1] = (self.aim[1] - self.position[1])
-    
-    def down(self, SURFACE = None):
+# called constantly
+    def updateAim(self, aim):
+        self.position = self.Owner.center
+        self.velocity = self.Owner.velocity
+        self.reticule[0] = (aim[0] - self.Owner.position[0])
+        self.reticule[1] = (aim[1] - self.Owner.position[1])
+
+# down triger action
+    def down(self):
         self.held = True
         
-    def up(self, SURFACE = None):
+# up triger action
+    def up(self):
         self.held = False
-    
-    def hold(self, SURFACE = None):
+
+# hold triger action
+    def hold(self):
         pass
 
 class Laser(Gun): 
-    def hold(self, SURFACE = None):
-        pygame.draw.line(SURFACE, LASER_RED, self.position, self.aim, 3)
+    def hold(self):
+        pygame.draw.line(STAGE, LASER_RED, self.position, self.aim, 3)
 
 class Rifle(Gun):
-    def down(self, SURFACE = None):
+    def down(self):
         self.held = True
-        Bull = Bullet(pygame.image.load('test.png'), self.position, self.velocity)
-        Bull.Owner = self.Owner
-        Bull.thrust = 25
-        if self.reticule[0] < 0:
-            Bull.direction = math.atan(self.reticule[1]/self.reticule[0]) + math.pi
-            Bull.velocity[0] += Bull.thrust * math.cos(Bull.direction)
-            Bull.velocity[1] += Bull.thrust * math.sin(Bull.direction)
-        elif self.reticule[0] > 0:
-            Bull.direction = math.atan(self.reticule[1]/self.reticule[0])
-            Bull.velocity[0] += Bull.thrust * math.cos(Bull.direction)
-            Bull.velocity[1] += Bull.thrust * math.sin(Bull.direction)
-        elif self.reticule[0] == 0 and self.reticule[1] < 0:
-            Bull.velocity[1] -= Bull.thrust
-        elif self.reticule[0] == 0 and self.reticule[1] > 0:
-            Bull.velocity[1] += Bull.thrust
+        Bullet = Projectile(pygame.image.load('test.png'), self)
+        Bullet.fire()
 main()
