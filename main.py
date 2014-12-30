@@ -13,12 +13,7 @@ WINDOWHEIGHT = 700
 CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 
 BUTTASSPATH = ".\images\ButtAssSmall.png"
-BUTTASSWIDTH = 73
-BUTTASSHEIGHT = 100
-
 DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
-DONKEYASSWIDTH = 98
-DONKEYASSHEIGHT = 138
 
 # set up the stage
 BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
@@ -135,7 +130,9 @@ def randomVelocity(rangeX = 5, rangeY = 5):
 class RigidBody: # physics objects # need to add collision
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
-        self.position = [spawn[0], spawn[1]]
+        self.size = Sprite.get_size()
+        self.center = [spawn[0], spawn[1]]
+        self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
         self.velocity = [velocity[0], velocity[1]]
         self.Items= []
         ObjectDrawQueue.append(self)
@@ -150,9 +147,10 @@ class RigidBody: # physics objects # need to add collision
 class Actor(RigidBody): # intelegent bodies # need AI owners
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
-        self.position = [spawn[0] - 16, spawn[1] - 16]
-        self.velocity = [velocity[0], velocity[1]]
+        self.size = Sprite.get_size()
         self.center = [spawn[0], spawn[1]]
+        self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
+        self.velocity = [velocity[0], velocity[1]]
         self.Items= []
         self.health = 100
         self.thrust = 0.25
@@ -184,16 +182,17 @@ class Actor(RigidBody): # intelegent bodies # need AI owners
 class BadAss(RigidBody): # thinking of making Ass class with good/bad children?
     def __init__(self, Sprite, spawn = None, velocity = None):
         self.sprite = Sprite
-        position = []
+        self.size = Sprite.get_size()
         if spawn == None:
-            self.position = randomLocation()
+            self.center = randomLocation()
+            self.position = [self.center[0] - (self.size[0]/2), self.center[1] - (self.size[1]/2)]
         else:
-            self.position = spawn
+            self.center = [spawn[0], spawn[1]]
+            self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
         if velocity == None:
             self.velocity = randomVelocity()
         else:
             self.velocity = velocity
-        self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
         self.Items= []
         ObjectDrawQueue.append(self)
         
@@ -202,16 +201,18 @@ class BadAss(RigidBody): # thinking of making Ass class with good/bad children?
     
 class GoodAss(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
-        position = []
+        self.sprite = Sprite
+        self.size = Sprite.get_size()
         if spawn == None:
-            self.position = randomLocation()
+            self.center = randomLocation()
+            self.position = [self.center[0] - (self.size[0]/2), self.center[1] - (self.size[1]/2)]
         else:
-            self.position = spawn
+            self.center = [spawn[0], spawn[1]]
+            self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
         if velocity == None:
             self.velocity = randomVelocity()
         else:
             self.velocity = velocity
-        self.center = [self.position[0] + DONKEYASSWIDTH/2, self.position[1] + DONKEYASSHEIGHT/2]
         self.Items= []
         ObjectDrawQueue.append(self)
         
@@ -221,15 +222,10 @@ class GoodAss(RigidBody):
 class Projectile(RigidBody):
     def __init__(self, Sprite, Owner):
         self.sprite = Sprite
-        self.position = []
-        self.position.append(Owner.position[0] - 16)
-        self.position.append(Owner.position[1] - 16)
-        self.velocity = []
-        self.velocity.append(Owner.velocity[0])
-        self.velocity.append(Owner.velocity[1])
-        self.center = []
-        self.center.append(Owner.position[0])
-        self.center.append(Owner.position[1])
+        self.size = Sprite.get_size()
+        self.center = [Owner.position[0], Owner.position[1]]
+        self.position = [Owner.position[0] - (self.size[0]/2), Owner.position[1] - (self.size[1]/2)]
+        self.velocity = [Owner.velocity[0], Owner.velocity[1]]
         self.Items = []
         self.Owner = Owner
         ObjectDrawQueue.append(self)
