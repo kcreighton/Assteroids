@@ -56,7 +56,7 @@ def main():
         # quick random gen (implement better later)
         count += 1
         if count == 60:
-            BadAssList.append(BadAss(pygame.image.load('ship.png'), randomLocation(), randomVelocity()))
+            BadAssList.append(BadAss(pygame.image.load('ship.png')))
             count = 0
     # continuous events
         # movement
@@ -122,20 +122,14 @@ def inertia(RigidBodyList): # takes the velocity of all RigidBodies and moves th
         Body.center[1] += Body.velocity[1]
 
 def randomLocation():
-    x = 0
-    y = 0
-    while ( x == 0 and y == 0):
-        x = randint(0,WINDOWWIDTH)
-        y = randint(0,WINDOWHEIGHT)
-    return (x, y)
+    x = randint(0,WINDOWWIDTH)
+    y = randint(0,WINDOWHEIGHT)
+    return [x, y]
 
 def randomVelocity(rangeX = 5, rangeY = 5):
-    x = 0
-    y = 0
-    while ( x == 0 and y == 0):
-        x = randint(-rangeX, rangeX)
-        y = randint(-rangeY, rangeY)
-    return (x, y)
+    x = randint(-rangeX, rangeX)
+    y = randint(-rangeY, rangeY)
+    return [x, y]
 
 class RigidBody:
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
@@ -186,11 +180,19 @@ class Actor(RigidBody):
     def hit(self):
         pass
     
+    
 class BadAss(RigidBody):
-    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
+    def __init__(self, Sprite, spawn = None, velocity = None):
         self.sprite = Sprite
-        self.position = [spawn[0], spawn[1]]
-        self.velocity = [velocity[0], velocity[1]]
+        position = []
+        if spawn == None:
+            self.position = randomLocation()
+        else:
+            self.position = spawn
+        if velocity == None:
+            self.velocity = randomVelocity()
+        else:
+            self.velocity = velocity
         self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
         self.Items= []
         ObjectDrawQueue.append(self)
@@ -200,10 +202,16 @@ class BadAss(RigidBody):
     
 class GoodAss(RigidBody):
     def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
-        self.sprite = Sprite
-        self.position = [spawn[0], spawn[1]]
-        self.velocity = [velocity[0], velocity[1]]
-        self.center = [self.position[0] + BUTTASSWIDTH/2, self.position[1] + BUTTASSHEIGHT/2]
+        position = []
+        if spawn == None:
+            self.position = randomLocation()
+        else:
+            self.position = spawn
+        if velocity == None:
+            self.velocity = randomVelocity()
+        else:
+            self.velocity = velocity
+        self.center = [self.position[0] + DONKEYASSWIDTH/2, self.position[1] + DONKEYASSHEIGHT/2]
         self.Items= []
         ObjectDrawQueue.append(self)
         
