@@ -236,11 +236,11 @@ class Projectile(RigidBody):
 
     def fire(self):
         if self.Owner.reticule[0] < 0:
-            self.direction = math.atan(self.Owner.reticule[1]/self.Owner.reticule[0]) + math.pi
+            self.direction = math.atan( (self.Owner.reticule[1] - 16)/(self.Owner.reticule[0] - 16) ) + math.pi
             self.velocity[0] += self.Owner.propulsion * math.cos(self.direction)
             self.velocity[1] += self.Owner.propulsion * math.sin(self.direction)
         elif self.Owner.reticule[0] > 0:
-            self.direction = math.atan(self.Owner.reticule[1]/self.Owner.reticule[0])
+            self.direction = math.atan( (self.Owner.reticule[1] - 16)/(self.Owner.reticule[0] - 16) )
             self.velocity[0] += self.Owner.propulsion * math.cos(self.direction)
             self.velocity[1] += self.Owner.propulsion * math.sin(self.direction)
         elif self.Owner.reticule[0] == 0 and self.Owner.reticule[1] < 0:
