@@ -5,11 +5,11 @@ from random import randint
 # COLORS  = (RRR, GGG, BBB, AAA)
 BLACK     = (000, 000, 000)
 WHITE     = (255, 255, 255)
-LASER_RED = (255, 000, 000, 200)
+LASER_RED = (255, 000, 000, 100)
 CLEAR     = (000, 000, 000, 000)
 
-WINDOWWIDTH = 1340
-WINDOWHEIGHT = 700
+WINDOWWIDTH = 1800
+WINDOWHEIGHT = 1000
 CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 
 BUTTASSPATH = ".\images\ButtAssSmall.png"
@@ -19,7 +19,6 @@ DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
 BACKGROUND = pygame.display.set_mode((WINDOWWIDTH,  WINDOWHEIGHT), 0, 32)
 STAGE = BACKGROUND.convert_alpha()
 PHYSICS = BACKGROUND.convert_alpha() # invisible layer for colision detection
-SCREEN = BACKGROUND.convert_alpha() # invisible layer for FOV
 pygame.display.set_caption('Assteroids')
 ObjectDrawQueue = [] # placment list
 
@@ -32,8 +31,8 @@ def main():
 
 # create props
     One = Actor(pygame.image.load('test.png'))
-    Blaster = Rifle(One)
-    Blaster.propulsion = 50
+    Rifle = Kinetic(One)
+    Rifle.propulsion = 240
     BadAssList = []
     
     # quick random gen (implement better later)
@@ -45,7 +44,6 @@ def main():
         BACKGROUND.fill(BLACK)
         STAGE.fill(CLEAR)
         PHYSICS.fill(CLEAR)
-        SCREEN.fill(BLACK)
         
     # constant events
         physics(ObjectDrawQueue)
@@ -106,28 +104,24 @@ def main():
     
     # populate stage
         for Object in ObjectDrawQueue:
+            if Object.trail == True:
+                pygame.draw.line(STAGE, WHITE, Object.lastCenter, Object.center, 2)
+                pygame.draw.line(PHYSICS, WHITE, Object.lastCenter, Object.center, 2)
             STAGE.blit(Object.sprite, Object.position)
             
     # take picture
         BACKGROUND.blit(STAGE, (0, 0))
-        #BACKGROUND.blit(SCREEN, (0, 0)) NOT IMPLEMENTED
         pygame.display.update()
         fpsClock.tick(FPS)
         
 # called constantly # takes the velocity of all RigidBodies and moves them over time
 def physics(RigidBodyList):
     for Body in RigidBodyList:
-        if Body.trail == True:
-            oldPoint = Body.center
-            newPoint = []
-            newPoint.append(Body.center[0] + Body.velocity[0]*2)
-            newPoint.append(Body.center[1] + Body.velocity[1]*2)
-            pygame.draw.line(STAGE, WHITE, oldPoint, newPoint, 3)
-            pygame.draw.line(PHYSICS, WHITE, oldPoint, newPoint, 3)
         Body.position[0] += Body.velocity[0]
         Body.position[1] += Body.velocity[1]
         Body.center[0] += Body.velocity[0]
         Body.center[1] += Body.velocity[1]
+        Body.lastCenter = [ (Body.center[0] - Body.velocity[0]*2), (Body.center[1] - Body.velocity[1]*2) ]
             
 def randomLocation():
     x = randint(0,WINDOWWIDTH)
@@ -144,6 +138,7 @@ class RigidBody: # physics objects # need to add collision
         self.sprite = Sprite
         self.size = Sprite.get_size()
         self.center = [spawn[0], spawn[1]]
+        self.lastCenter = self.center
         self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
         self.velocity = [velocity[0], velocity[1]]
         self.Items= []
@@ -162,6 +157,7 @@ class Actor(RigidBody): # intelegent bodies # need AI owners
         self.sprite = Sprite
         self.size = Sprite.get_size()
         self.center = [spawn[0], spawn[1]]
+        self.lastCenter = self.center
         self.position = [spawn[0] - (self.size[0]/2), spawn[1] - (self.size[1]/2)]
         self.velocity = [velocity[0], velocity[1]]
         self.Items= []
@@ -207,6 +203,7 @@ class BadAss(RigidBody): # thinking of making Ass class with good/bad children?
             self.velocity = randomVelocity()
         else:
             self.velocity = velocity
+        self.lastCenter = self.center
         self.Items= []
         self.trail = False
         ObjectDrawQueue.append(self)
@@ -228,6 +225,7 @@ class GoodAss(RigidBody):
             self.velocity = randomVelocity()
         else:
             self.velocity = velocity
+        self.lastCenter = self.center
         self.Items= []
         self.trail = False
         ObjectDrawQueue.append(self)
@@ -249,6 +247,7 @@ class Projectile(RigidBody):
             self.position = [Owner.position[0] - (self.size[0]/2), Owner.position[1] - (self.size[1]/2)]
             self.trail = False
         self.velocity = [Owner.velocity[0], Owner.velocity[1]]
+        self.lastCenter = self.center
         self.Items = []
         self.Owner = Owner
         ObjectDrawQueue.append(self)
@@ -267,6 +266,9 @@ class Projectile(RigidBody):
         elif self.Owner.reticule[0] == 0 and self.Owner.reticule[1] > 0:
             self.velocity[1] += self.Owner.propulsion
 
+    def wind(self):
+        pass
+        
     def hit(self):
         pass
     
@@ -275,7 +277,7 @@ class Gun: # projectile creator
         self.reticule = [] # point relative to gun (updated costantly)
         self.reticule.append(Owner.aim[0] - Owner.position[0])
         self.reticule.append(Owner.aim[1] - Owner.position[1])
-        self.position = Owner.center
+        self.position = Owner.lastCenter
         self.velocity = Owner.velocity
         self.propulsion = 1
         self.held = False
@@ -304,12 +306,18 @@ class Gun: # projectile creator
 
 class Laser(Gun):
     def hold(self):
-        pygame.draw.line(STAGE, LASER_RED, self.position, self.Owner.aim, 3)
+        pygame.draw.line(STAGE, LASER_RED, self.center, self.Owner.aim, 2)
 
-class Rifle(Gun):
-    def up(self):
-        self.held = False
+class Kinetic(Gun):
+    def down(self):
+        self.held = True
         Bullet = Projectile(self)
         Bullet.fire()
+
+    def up(self):
+        self.held = False
+
+    def hold(self):
+        pass
 
 main()
