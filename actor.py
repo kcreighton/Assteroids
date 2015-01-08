@@ -1,10 +1,11 @@
+import math
+from setup import *
 from random import randint
 from rigidBody import *
-from assUtil import *
-import assConstants
+from utility import *
 
 class Actor(RigidBody): # intelegent bodies # need AI owners
-    def __init__(self, Sprite, spawn = assConstants.CENTER, velocity = [0, 0]):
+    def __init__(self, Sprite, spawn = CENTER, velocity = [0, 0]):
         self.sprite = Sprite
         self.size = Sprite.get_size()
         self.center = [spawn[0], spawn[1]]
@@ -28,7 +29,7 @@ class Actor(RigidBody): # intelegent bodies # need AI owners
         self.velocity[0] += thrust * math.cos(direction)
         self.velocity[1] += thrust * math.sin(direction)
 
-    def respawn(self, spawn = assConstants.CENTER, preserveVelocity = False):
+    def respawn(self, spawn = CENTER, preserveVelocity = False):
         self.position = [spawn[0], spawn[1]]
         self.center = [spawn[0] + 16, spawn[1] + 16]
         if preserveVelocity == False:

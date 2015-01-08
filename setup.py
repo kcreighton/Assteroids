@@ -1,3 +1,5 @@
+import pygame
+
 # COLORS  = (RRR, GGG, BBB, AAA)
 BLACK     = (000, 000, 000)
 WHITE     = (255, 255, 255)
@@ -10,3 +12,12 @@ CENTER = (WINDOWWIDTH/2, WINDOWHEIGHT/2)
 
 BUTTASSPATH = ".\images\ButtAssSmall.png"
 DONKEYASSPATH = ".\images\ButtDonkeySmall.png"
+
+# set up the stage
+BACKGROUND = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT), 0, 32)
+STAGE = BACKGROUND.convert_alpha()
+pygame.display.set_caption('Assteroids')
+ObjectDrawQueue = [] # placment list
+BadAssList = []
+GoodAssList = []
+CollisionList = [None, None]

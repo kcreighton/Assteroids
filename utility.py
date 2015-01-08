@@ -1,11 +1,11 @@
-import pygame, sys, math
-from pygame.locals import *
+import pygame
+from setup import *
 from random import randint
-import assConstants
+
 
 def randomLocation():
-    x = randint(0, assConstants.WINDOWWIDTH)
-    y = randint(0, assConstants.WINDOWHEIGHT)
+    x = randint(0, WINDOWWIDTH)
+    y = randint(0, WINDOWHEIGHT)
     return [x, y]
 
 def randomVelocity(rangeX = 5, rangeY = 5):
