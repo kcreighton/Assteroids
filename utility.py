@@ -1,4 +1,3 @@
-import pygame
 from setup import *
 from random import randint
 

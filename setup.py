@@ -20,4 +20,3 @@ pygame.display.set_caption('Assteroids')
 ObjectDrawQueue = [] # placment list
 BadAssList = []
 GoodAssList = []
-CollisionList = [None, None]

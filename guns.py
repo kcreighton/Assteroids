@@ -12,6 +12,7 @@ class Gun: # projectile creator
         self.propulsion = 1
         self.held = False
         self.accuracy = 0 # use to create variance in reticule from Owner's aim
+        self.projectile = []
         self.Owner = Owner
         Owner.Gun = self
 

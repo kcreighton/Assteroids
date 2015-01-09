@@ -13,14 +13,16 @@ class RigidBody: # physics objects # need to add collision
         self.velocity = [velocity[0], velocity[1]]
         self.Items= []
         self.trail = False
+        self.Owner = None
         ObjectDrawQueue.append(self)
         
     def accelerate(self, direction, thrust):
         self.velocity[0] += thrust * math.cos(direction)
         self.velocity[1] += thrust * math.sin(direction)
 
-    def hit(self):
-        pass
+    def hit(self, Body):
+        self.sprite = pygame.image.load('invisiPoint.png')
+    
 class Ass(RigidBody):
     def __init__(self, Sprite, spawn = None, velocity = None, bad = True):
         self.sprite = Sprite
@@ -39,9 +41,7 @@ class Ass(RigidBody):
         self.Items= []
         self.trail = False
         self.bad = None
-        
-    def hit(self):
-        pass
+        self.Owner = None
     
 def newAss(bad = True):
     if bad == True:
@@ -69,6 +69,7 @@ class Projectile(RigidBody):
         self.lastCenter = self.center
         self.Items = []
         self.Owner = Owner
+        Owner.projectile.append(self)
         ObjectDrawQueue.append(self)
 
     def fire(self):
@@ -84,7 +85,3 @@ class Projectile(RigidBody):
             self.velocity[1] -= self.Owner.propulsion
         elif self.Owner.reticule[0] == 0 and self.Owner.reticule[1] > 0:
             self.velocity[1] += self.Owner.propulsion
-
-    def hit(self):
-        pass
-
